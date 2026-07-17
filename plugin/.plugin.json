@@ -1,0 +1,34 @@
+{
+	"$schema": "https://orgsdk.ai/schemas/plugin-manifest.v1.json",
+	"name": "gmail",
+	"version": "1.0.2",
+	"description": "Gmail integration (restricted scope). Requires a BYO Google OAuth client — first-party OAuth is not available for Gmail.",
+	"entry": "index.ts",
+	"auth": {
+		"type": "oauth2",
+		"provider": "google-oauth",
+		"label": "Google (Gmail — BYO only)",
+		"hint": "Restricted scope: paste your own Google OAuth client JSON (no one-click connect). Grant the https://mail.google.com/ scope. Can be shared with google-sheets/google-tasks.",
+		"scopes": ["https://mail.google.com/"],
+		"callbackPath": "/callback"
+	},
+	"marketplace": {
+		"displayName": "Gmail",
+		"category": "Communication",
+		"tagline": "Give agents a scoped Gmail inbox — search threads, extract attachments, draft replies, and send templated email on a schedule.",
+		"tags": ["email", "google"],
+		"useCases": [
+			"Triage a label by priority and surface threads that need a reply",
+			"Draft and send replies that match the thread context",
+			"Extract attachments and parse PDFs (e.g. invoices, expense reports)",
+			"Route receipt threads to a Google Sheet and mark them processed",
+			"Send templated notifications or reports with attachments"
+		],
+		"permissionsSummary": "Read, modify labels on, and send Gmail messages via a restricted OAuth scope. Reading and labeling are reversible; sending and replying are mutating.",
+		"links": {
+			"homepage": "https://mail.google.com",
+			"docs": "https://developers.google.com/gmail/api",
+			"sourceRepo": "https://github.com/OrgSDK/orgsdk-plugin-gmail"
+		}
+	}
+}
