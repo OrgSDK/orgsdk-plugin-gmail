@@ -6,6 +6,75 @@ The catalog treats versions as **write-once**: a given `(slug, version)` may be
 re-published only with identical artifact content; differing content is
 rejected with HTTP 409. Every entry below is therefore forward-only.
 
+## [1.0.5] — provenance + static-action-scanner correction (forward-only)
+
+A forward-only patch release that re-establishes this standalone repository as
+the **canonical source** of the `gmail` plugin. **No plugin source behavior
+changed** — the thirteen safe functions, the `google-oauth` BYO connect contract
+(authProvider + GET /callback), the restricted `https://mail.google.com/` scope,
+the explicit first-party rejection, the 3-tier BYO resolution, and the
+`@googleapis/gmail` + `google-auth-library` + `turndown` runtime dependencies
+are byte-identical to `1.0.2` (the last release from this repository).
+
+### Why 1.0.5 (and what happened to 1.0.3 / 1.0.4)
+
+After the Phase 3 static-action-scanner fix landed in the monorepo
+(`7baf93c` — regex/template-aware field extraction; `d9f4cfb` — send
+pre-resolution source so the server can derive actions), `gmail` was
+**mistakenly re-published through the monorepo `scripts/publish-plugin.ts`
+path** rather than from this external repository. That produced catalog entries
+`1.0.3` and `1.0.4` from **stale monorepo bytes**, with two regressions:
+
+1. **Lost provenance.** The monorepo source does not carry
+   `marketplace.links.sourceRepo`; only this repository's manifest does. Both
+   `1.0.3` and `1.0.4` therefore shipped with **no source-repository link**,
+   breaking the canonical-source guarantee for an external plugin.
+2. **Misclassified safety metadata.** Under the pre-fix scanner those entries
+   derived **all thirteen** functions as `write` — the five read operations lost
+   their `readonly` tags entirely (no `readonly`, no `discovery`).
+
+Because catalog versions are write-once, `1.0.3` and `1.0.4` are immutable
+history and **cannot be repaired in place** (any differing re-publish is
+rejected with HTTP 409). They are documented here as a non-functional detour and
+**superseded** by `1.0.5`. The external-repository HEAD never moved past the
+`1.0.2` extraction commit (`7f38fde`); `1.0.5` is the first forward release from
+this repository since then.
+
+### Corrected by 1.0.5
+
+- **Provenance restored.** The manifest's `marketplace.links.sourceRepo` again
+  points at `https://github.com/OrgSDK/orgsdk-plugin-gmail`, so the catalog
+  latest reflects the canonical external source.
+- **Safety metadata corrected.** With the now-deployed scanner fix
+  (template-aware `metadata` extraction over **pre-resolution** source), the
+  thirteen functions derive correctly: **five `readonly`** read operations
+  (`getMessages`, `getMessage`, `getThread`, `listLabels`, `getMessageAttachment`)
+  and **eight `write`** operations (three label ops, two read-state ops, and the
+  three sends — `sendMessage`, `sendMessageWithAttachment`, `replyToMessage`).
+  The source already carried `readonly: true` / `discovery: true` on the read
+  functions; only the derivation was broken before.
+
+### Changed
+
+- Bump `plugin/.plugin.json` version `1.0.2` → `1.0.5` (catalog source of
+  truth).
+- Bump `package.json` version `1.0.2` → `1.0.5` (kept in sync; enforced by the
+  CI version guard).
+- `tests/manifest.test.ts` version assertion → `1.0.5`.
+- `docs/release.md` current-version pointer + this release section.
+
+### Frozen (unchanged from 1.0.2)
+
+- All thirteen safe functions — names, parameters, return types, metadata, tags,
+  the readonly/write split (five readonly, eight write), and the five discovery
+  flags.
+- The `google-oauth` connect-ownership contract, the restricted scope, the
+  explicit first-party rejection, and the 3-tier BYO resolution.
+- Every TypeScript source file under `plugin/` (`gmail-functions.ts`,
+  `auth-provider.ts`, `oauth.ts`, `terminal-oauth-flow.ts`, `index.ts`) and the
+  plugin docs/guides — byte-identical to `1.0.2`.
+- Runtime dependencies and the deterministic bundling closure.
+
 ## [1.0.2] — standalone repository extraction
 
 A forward-only patch release that migrates the `gmail` plugin from the

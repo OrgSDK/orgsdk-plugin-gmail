@@ -1,6 +1,6 @@
 {
 	"name": "@orgsdk/plugin-gmail",
-	"version": "1.0.2",
+	"version": "1.0.5",
 	"description": "Gmail integration (restricted scope, BYO only) — search, threads, labels, attachments, send, reply. Shares the google-oauth credential with google-sheets/google-tasks but rejects first-party tokens.",
 	"type": "module",
 	"private": true,

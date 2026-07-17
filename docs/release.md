@@ -90,7 +90,7 @@ status-check bypass races (defense in depth).
 
 ## Version policy
 
-- **Current version:** `1.0.2`.
+- **Current version:** `1.0.5`.
 - The manifest version (`plugin/.plugin.json` → `version`) is the **source of
   truth** for the catalog. `package.json` → `version` is kept in sync (enforced
   by the CI version guard).
@@ -101,6 +101,23 @@ status-check bypass races (defense in depth).
 - Versions are **write-once** in the catalog: re-publishing the same
   `(slug, version)` with identical content is idempotent; different content is
   rejected with HTTP 409. Always bump the version for changed content.
+
+### 1.0.5 — provenance + static-action-scanner correction (forward-only)
+
+`1.0.5` re-establishes this standalone repository as the canonical source of the
+`gmail` plugin after `1.0.3`/`1.0.4` were mistakenly published from stale
+monorepo bytes via the monorepo publish path. Those entries lost the
+`marketplace.links.sourceRepo` provenance link and, under the pre-fix scanner,
+derived all thirteen functions as `write`. They are immutable write-once history
+and are superseded by `1.0.5`.
+
+No plugin source behavior changed — the thirteen safe functions, the BYO connect
+contract, the restricted scope, the first-party rejection, and the runtime
+dependencies are byte-identical to `1.0.2`. The version bump exists only because
+the manifest provenance is restored and the now-corrected scanner re-derives the
+safety metadata (five `readonly` read ops + eight `write`, including the three
+sends). See [CHANGELOG.md](../CHANGELOG.md#105--provenance--static-action-scanner-correction-forward-only)
+for the full corrected-scanner / provenance account.
 
 ### 1.0.2 — standalone repository extraction
 
@@ -145,8 +162,8 @@ dist/
 │   ├── terminal-oauth-flow.ts
 │   ├── docs/overview.md
 │   └── guides/usage-patterns.md
-├── gmail-1.0.2.manifest.json                  # file list + SHA-256 checksums (sorted)
-└── gmail-1.0.2.tgz                            # tarball of the plugin folder
+├── gmail-1.0.5.manifest.json                  # file list + SHA-256 checksums (sorted)
+└── gmail-1.0.5.tgz                            # tarball of the plugin folder
 ```
 
 Packaging is deterministic: `dist/` is fully removed and recreated on every
