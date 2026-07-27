@@ -6,6 +6,36 @@ The catalog treats versions as **write-once**: a given `(slug, version)` may be
 re-published only with identical artifact content; differing content is
 rejected with HTTP 409. Every entry below is therefore forward-only.
 
+## [1.0.6] — Google BYO OAuth setup guide
+
+### Added
+- **`auth.setupGuide`** — a complete structured setup guide that the dashboard
+  renders as an in-product checklist for bringing your own Google OAuth client.
+  Gmail requires BYO (restricted `https://mail.google.com/` scope; no one-click
+  connect), so the guide is the primary connection path.
+  - Seven ordered steps: Google Cloud project → enable the Gmail API → consent
+    screen → Web application OAuth client → authorized redirect URI → download
+    JSON → connect.
+  - Callback URL presentation (`{ label, instruction }`), credential field
+    presentation (`{ label, description, placeholder }`), prerequisites, and an
+    HTTPS troubleshooting URL.
+  - Permission presentation for `https://mail.google.com/` with a readable
+    label and the `Restricted / broad` classification.
+  - Every external link is HTTPS-validated by the canonical author schema.
+
+### Changed
+- Bump `plugin/.plugin.json` version `1.0.5` → `1.0.6`.
+- Bump `package.json` version `1.0.5` → `1.0.6`.
+- Bump `@orgsdk/plugins` devDependency `0.2.1` → `0.2.2` (models
+  `auth.setupGuide`). **The lockfile must be regenerated after SDK 0.2.2 is
+  published to npm** — see `docs/release.md`.
+- `tests/manifest.test.ts` version assertion → `1.0.6` and new setup-guide
+  assertions.
+
+### Frozen (unchanged from 1.0.5)
+- All thirteen safe functions, the BYO authProvider, GET /callback, the
+  restricted scope, the first-party rejection, and runtime dependencies.
+
 ## [1.0.5] — provenance + static-action-scanner correction (forward-only)
 
 A forward-only patch release that re-establishes this standalone repository as

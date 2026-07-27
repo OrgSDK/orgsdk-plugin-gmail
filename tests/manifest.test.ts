@@ -15,9 +15,9 @@ describe("manifest", () => {
 		expect(m.name).toBe("gmail");
 	});
 
-	it("has the bumped version 1.0.5", async () => {
+	it("has the bumped version 1.0.6", async () => {
 		const m = await readManifest();
-		expect(m.version).toBe("1.0.5");
+		expect(m.version).toBe("1.0.6");
 	});
 
 	it("declares the canonical $schema", async () => {
@@ -75,6 +75,57 @@ describe("manifest", () => {
 		const m = await readManifest();
 		const auth = m.auth as Record<string, unknown>;
 		expect(auth.firstParty).toBeUndefined();
+	});
+
+	// Gmail's connection experience is author-owned metadata, not dashboard
+	// copy. The setup guide surfaces the restricted-scope / BYO-only contract
+	// and the Gmail API so a first-time user can self-serve.
+	it("declares a structured BYO setup guide (restricted scope, no one-click)", async () => {
+		const m = await readManifest();
+		const auth = m.auth as Record<string, unknown>;
+		const rawGuide = auth.setupGuide;
+		expect(rawGuide).toBeDefined();
+		const guide = rawGuide as Record<string, unknown>;
+		expect(typeof guide.summary).toBe("string");
+		const summary = String(guide.summary).toLowerCase();
+		expect(summary).toContain("restricted");
+		expect(summary).toContain("one-click");
+		expect(guide.configField).toBeDefined();
+		const steps = guide.steps as Array<Record<string, unknown>>;
+		expect(Array.isArray(steps)).toBe(true);
+		expect(steps.length).toBeGreaterThanOrEqual(5);
+		// Every external link must be HTTPS.
+		for (const step of steps) {
+			const link = step.link as Record<string, string> | undefined;
+			if (link) expect(link.url).toMatch(/^https:\/\//i);
+		}
+		expect(String(guide.troubleshootingUrl)).toMatch(/^https:\/\//i);
+	});
+
+	it("the setup guide names the Gmail API in the enable-APIs step", async () => {
+		const m = await readManifest();
+		const auth = m.auth as Record<string, unknown>;
+		const guide = auth.setupGuide as Record<string, unknown> | undefined;
+		const steps = guide?.steps as Array<Record<string, unknown>> | undefined;
+		const enableStep = steps?.find((s) => /enable.*api/i.test(String(s.title)));
+		expect(enableStep?.description?.toString().toLowerCase()).toContain(
+			"gmail api",
+		);
+	});
+
+	it("declares an author-owned permission label + classification for the Gmail scope", async () => {
+		const m = await readManifest();
+		const auth = m.auth as Record<string, unknown>;
+		const guide = auth.setupGuide as Record<string, unknown> | undefined;
+		const permissions = guide?.permissions as
+			| Record<string, Record<string, string>>
+			| undefined;
+		expect(
+			permissions?.["https://mail.google.com/"]?.label?.toLowerCase(),
+		).toContain("gmail");
+		expect(
+			permissions?.["https://mail.google.com/"]?.classification,
+		).toBeTruthy();
 	});
 
 	it("declares marketplace metadata with the source-repo provenance link", async () => {
