@@ -16,7 +16,7 @@
 		"build": "bun run typecheck && bun run validate && bun run package"
 	},
 	"dependencies": {
-		"@googleapis/gmail": "^17.0.0",
+		"@googleapis/gmail": "^18.0.0",
 		"google-auth-library": "^10.6.2",
 		"turndown": "^7.2.4"
 	},
