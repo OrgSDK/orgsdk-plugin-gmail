@@ -82,8 +82,8 @@ describe("packaging", () => {
 		// All three runtime dependencies ARE present.
 		const deps = pkg.dependencies as Record<string, string> | undefined;
 		expect(deps).toBeDefined();
-		expect(deps?.["@googleapis/gmail"]).toBe("^17.0.0");
-		expect(deps?.["google-auth-library"]).toBe("^10.6.2");
+		expect(deps?.["@googleapis/gmail"]).toBe("22.0.2");
+		expect(deps?.["google-auth-library"]).toBe("11.3.2");
 		expect(deps?.turndown).toBe("^7.2.4");
 		// The authoring SDK must NOT be a runtime dependency (type-only).
 		expect(deps?.["@orgsdk/plugins"]).toBeUndefined();

@@ -129,8 +129,8 @@ describe("source purity", () => {
 		) as Record<string, unknown>;
 		const deps = pkg.dependencies as Record<string, string> | undefined;
 		expect(deps).toBeDefined();
-		expect(deps?.["@googleapis/gmail"]).toBe("^17.0.0");
-		expect(deps?.["google-auth-library"]).toBe("^10.6.2");
+		expect(deps?.["@googleapis/gmail"]).toBe("22.0.2");
+		expect(deps?.["google-auth-library"]).toBe("11.3.2");
 		expect(deps?.turndown).toBe("^7.2.4");
 		expect(Object.keys(deps ?? {}).sort()).toEqual([
 			"@googleapis/gmail",
@@ -141,11 +141,11 @@ describe("source purity", () => {
 		expect(deps?.["@orgsdk/plugins"]).toBeUndefined();
 	});
 
-	it("package.json carries the repo-local google-auth-library override (dedupe for typechecking)", async () => {
+	it("package.json pins safe transitive dependency versions", async () => {
 		const pkg = JSON.parse(
 			await readFile(resolve(ROOT, "package.json"), "utf-8"),
 		) as Record<string, unknown>;
-		expect(pkg.overrides).toEqual({ "google-auth-library": "10.9.0" });
+		expect(pkg.overrides).toEqual({ zod: "4.6.7", qs: "6.17.1" });
 		// The override is repo-local ONLY — it must not appear in the runtime
 		// dependencies block (that would imply it ships in the artifact).
 		const deps = pkg.dependencies as Record<string, unknown> | undefined;

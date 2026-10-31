@@ -1,18 +1,18 @@
 {
 	"$schema": "https://orgsdk.ai/schemas/plugin-manifest.v1.json",
 	"name": "gmail",
-	"version": "1.0.6",
+	"version": "1.0.7",
 	"description": "Gmail integration (restricted scope). Requires a BYO Google OAuth client — first-party OAuth is not available for Gmail.",
 	"entry": "index.ts",
 	"auth": {
 		"type": "oauth2",
 		"provider": "google-oauth",
 		"label": "Google (Gmail — BYO only)",
-		"hint": "Restricted scope: paste your own Google OAuth client JSON (no one-click connect). Grant the https://mail.google.com/ scope. Can be shared with google-sheets/google-tasks.",
+		"hint": "Connect your own Google OAuth application in OrgSDK. The host refreshes tokens; plugins receive only a run-scoped access token.",
 		"scopes": ["https://mail.google.com/"],
 		"callbackPath": "/callback",
 		"setupGuide": {
-			"summary": "Gmail uses a restricted Google permission, so this connection requires your own Google OAuth app — one-click Google connection is not available for Gmail. Create a Google Cloud OAuth client and paste its downloaded JSON here. The client belongs to your Google Cloud project and can be revoked from Google or OrgSDK later.",
+			"summary": "Gmail uses restricted Google scopes. Connect your own Google OAuth application in OrgSDK; the former one-click first-party relay is unavailable. The host owns consent and refresh, and plugins receive only a fresh access token.",
 			"prerequisites": [
 				"Access to create or edit a Google Cloud project.",
 				"Permission to configure the project's OAuth consent screen and credentials.",
@@ -45,11 +45,11 @@
 				},
 				{
 					"title": "Add the authorized redirect URI",
-					"description": "Copy the OrgSDK callback URL below and paste it under Authorized redirect URIs (not under Authorized JavaScript origins)."
+					"description": "Register the exact redirect URI shown by OrgSDK: your registered workspace origin followed by /oauth/callback. Add it under Authorized redirect URIs, not JavaScript origins."
 				},
 				{
 					"title": "Download the OAuth client JSON",
-					"description": "Download the client configuration and paste the complete file contents into the field below. It contains a client ID and client secret."
+					"description": "Download the OAuth client configuration, then enter its client ID and client secret in OrgSDK’s native Connect form. Keep these secrets on the host; do not put them in plugin configuration."
 				},
 				{
 					"title": "Connect Gmail",
