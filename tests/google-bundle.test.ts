@@ -128,8 +128,8 @@ async function stagePluginBundle(): Promise<StagedBundle> {
 			{
 				private: true,
 				dependencies: {
-					"@googleapis/gmail": "^17.0.0",
-					"google-auth-library": "^10.6.2",
+					"@googleapis/gmail": "22.0.2",
+					"google-auth-library": "11.3.2",
 					turndown: "^7.2.4",
 				},
 			},

@@ -1,3 +1,13 @@
+# Current execution contract
+
+Connect a BYO Google OAuth app with the advertised Gmail scope. OrgSDK handles consent, expiry and refresh. The plugin consumes only the fresh access-token snapshot. This does not establish Google app verification or a CASA assessment.
+
+Native OAuth providers receive only `{source: "byo", secret_accessToken}`. The host owns refresh. The first-party relay is retired.
+
+## Historical source reference
+
+The following describes the former author-source host; current npm and native credential behaviour above takes precedence.
+
 # Gmail
 
 Read and send Gmail — messages, threads, labels, and attachments. Uses the

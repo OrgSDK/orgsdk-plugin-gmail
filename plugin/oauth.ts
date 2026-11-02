@@ -1,44 +1,34 @@
 import { OAuth2Client } from "google-auth-library";
 
+/** OrgSDK's host refreshes tokens before issuing a run-scoped snapshot. */
 export interface GoogleOAuthBundle {
-	secret_clientId?: string;
-	secret_clientSecret?: string;
-	secret_refreshToken?: string;
-	/** Discriminator set at connect time. Absent = legacy (treated as byo). */
 	source?: "first-party" | "byo";
+	secret_accessToken?: string;
 	[key: string]: unknown;
 }
-
-/**
- * Build an OAuth2Client from a stored credential bundle.
- *
- * Gmail is a restricted scope (CASA audit) so the gmail plugin is BYO-only —
- * the tenant's own client secret refreshes locally. If the credential was
- * issued via first-party by the `google` (sheets/tasks) plugin, it carries no
- * client secret and lacks the Gmail scope, so we refuse it with a clear error
- * rather than failing opaquely inside the Gmail API call.
- */
 export async function getGoogleOAuth2Client(
 	bundle: GoogleOAuthBundle,
 ): Promise<OAuth2Client> {
-	if (bundle.source === "first-party") {
+	if (bundle.source !== "byo")
 		throw new Error(
-			"This google-oauth token was issued via first-party (Sheets/Tasks only) and cannot access Gmail. " +
-				"Gmail is a restricted scope — connect your own Google OAuth client for the gmail plugin.",
+			"Connect Google using your own OAuth application in OrgSDK.",
 		);
-	}
-
-	const { secret_clientId, secret_clientSecret, secret_refreshToken } = bundle;
-	if (!secret_refreshToken) {
+	if (
+		typeof bundle.secret_accessToken !== "string" ||
+		!bundle.secret_accessToken.trim()
+	) {
 		throw new Error(
-			"Missing google-oauth refresh token. Connect Google (BYO client) in the dashboard (Credentials tab).",
+			"Missing google-oauth access token. Reconnect Google in OrgSDK.",
 		);
 	}
 	const client = new OAuth2Client({
-		clientId: secret_clientId,
-		clientSecret: secret_clientSecret,
+		transporterOptions: {
+			timeout: 15_000,
+			retry: false,
+			maxContentLength: 2_000_000,
+		},
 	});
-	client.setCredentials({ refresh_token: secret_refreshToken });
+	client.setCredentials({ access_token: bundle.secret_accessToken });
 	return client;
 }
 
