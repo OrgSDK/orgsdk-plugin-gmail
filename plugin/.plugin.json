@@ -1,7 +1,7 @@
 {
 	"$schema": "https://orgsdk.ai/schemas/plugin-manifest.v1.json",
 	"name": "gmail",
-	"version": "1.0.7",
+	"version": "1.0.8",
 	"description": "Gmail integration (restricted scope). Requires a BYO Google OAuth client — first-party OAuth is not available for Gmail.",
 	"entry": "index.ts",
 	"auth": {

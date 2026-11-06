@@ -15,9 +15,9 @@ describe("manifest", () => {
 		expect(m.name).toBe("gmail");
 	});
 
-	it("has the bumped version 1.0.7", async () => {
+	it("has the bumped version 1.0.8", async () => {
 		const m = await readManifest();
-		expect(m.version).toBe("1.0.7");
+		expect(m.version).toBe("1.0.8");
 	});
 
 	it("declares the canonical $schema", async () => {
