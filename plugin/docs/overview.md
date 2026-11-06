@@ -1,95 +1,51 @@
-# Current execution contract
+# Gmail for OrgSDK
 
-Connect a BYO Google OAuth app with the advertised Gmail scope. OrgSDK handles consent, expiry and refresh. The plugin consumes only the fresh access-token snapshot. This does not establish Google app verification or a CASA assessment.
+## Install in OrgSDK
 
-Native OAuth providers receive only `{source: "byo", secret_accessToken}`. The host owns refresh. The first-party relay is retired.
+Open your project's Plugins page, select this plugin and enable the pinned release.
+The default catalogue is https://orgsdk.ai/plugins/releases.json. The executor
+downloads the versioned bundle and verifies its SHA256. Configure the provider
+and attach the credential described below before running an action.
 
-## Historical source reference
-
-The following describes the former author-source host; current npm and native credential behaviour above takes precedence.
-
-# Gmail
-
-Read and send Gmail — messages, threads, labels, and attachments. Uses the
-**restricted** `https://mail.google.com/` scope, so it is **BYO-only**: you
-must supply your own Google OAuth client (first-party one-click connect is
-**not** available for Gmail).
-
-## What it does
-
-The `gmail` plugin exposes full mailbox automation: search and read messages,
-manage labels, reply, and send with attachments. It is the ingestion point for
-email-driven workflows — invoices, support tickets, lead capture — and pairs
-naturally with the `llm` plugin (classify/extract) and `google-sheets`
-(persist).
-
-Typical uses:
-
-- **Invoice pipeline** — fetch invoice emails, extract fields with
-  `evalStructured`, append rows to a sheet.
-- **Support triage** — classify inbound messages, auto-reply to FAQs, escalate
-  the rest.
-- **Lead capture** — parse enquiry emails and write contacts to storage.
-- **Attachment handling** — download attachments, parse PDFs with `parsePdf`.
-
-## Functions
-
-| Function | Purpose |
-|---|---|
-| `getMessages` | List/search messages (Gmail query syntax). |
-| `getMessage` | Get a single message by ID. |
-| `getThread` | Get a thread. |
-| `getMessageAttachment` | Download an attachment (returns base64). |
-| `sendMessage` | Send a message (to/cc/bcc/subject/html). |
-| `sendMessageWithAttachment` | Send a message with an attachment. |
-| `replyToMessage` | Reply within a thread. |
-| `listLabels` / `ensureLabel` | List / create labels. |
-| `modifyMessageLabels` | Apply/remove labels (e.g. file into a folder). |
-| `batchModifyMessages` | Apply label changes to many messages at once. |
-| `markMessageAsRead` / `markMessageAsUnread` | Toggle read state. |
-
-The full function list (parameters, return types) is available via the
-`plugins:info` command in the dashboard.
+The plugin is Apache-2.0 licensed; see LICENSE, NOTICE and TRADEMARKS.md.
+The generated npm distribution is a separate publication surface. Installing npm
+files alone does not register a project plugin. Local builds do not publish it.
 
 ## Credentials
 
-Every function declares `requiredCredentials: ["google-oauth"]`. Gmail uses the
-**restricted** mail scope, so a Google credential must be connected before any
-function is callable — and it must come from **your own** OAuth client.
+Connect your own Google OAuth application in OrgSDK with `https://mail.google.com/`.
+Enable the corresponding Google API and register the exact callback URL shown
+by OrgSDK in your Google Cloud OAuth client. Attach the resulting `google-oauth`
+credential to this project plugin. The host owns consent and token refresh;
+execution receives only `{source: "byo", secret_accessToken}`. Client and refresh
+secrets stay on the host. No hosted OAuth relay is supported.
 
-| Provider | Type | Connect method |
-|---|---|---|
-| `google-oauth` | oauth2 | **BYO only.** Paste your own Google OAuth client JSON. The client's granted scopes must include `https://mail.google.com/`. First-party one-click connect is **not** offered for Gmail. |
+A Google credential may be shared with another Google plugin only when its granted
+scopes cover both plugins. Provider consent, app verification and account permissions
+are required independently of installing this package.
 
-> **Combining Gmail + Sheets/Tasks.** If you also use `google-sheets` or
-> `google-tasks`, connect a single BYO client whose granted scopes cover
-> Gmail + Sheets + Tasks. The shared `google-oauth` credential then serves all
-> three. (The first-party client covers only Sheets + Tasks — not Gmail.)
+Gmail uses a restricted scope. Distribution may require Google verification and a CASA assessment; publishing this plugin does not satisfy those requirements. Sending messages changes the recipient mailbox and needs appropriate approval.
 
-## Using it in a workflow
+## Functions
+
+- `getMessages` — Fetch Gmail messages using Gmail search query syntax (q). Label filters must use the label name (not the label ID), e.g. label:Expense or label:"Expense Reports". Returns cleaned text body optimized for LLM processing. HTML is converted to clean text, tracking pixels and quoted chains are removed.
+- `getMessage` — Fetch a single Gmail message by ID. Returns cleaned text body optimized for LLM processing. HTML is converted to clean text, tracking pixels and quoted chains are removed.
+- `listLabels` — List Gmail labels (id + name)
+- `ensureLabel` — Get or create a Gmail label by name; returns label object (id + name)
+- `modifyMessageLabels` — Add/remove Gmail label IDs on a message. Use removeLabelIds:['UNREAD'] to mark as read.
+- `batchModifyMessages` — Batch add/remove label IDs across multiple message IDs
+- `markMessageAsRead` — Mark Gmail message as read (removes UNREAD label)
+- `markMessageAsUnread` — Mark Gmail message as unread (adds UNREAD label)
+- `sendMessage` — Send an email via Gmail. Supports plain-text or HTML body. When html is provided, sends a multipart/alternative message with both text/plain and text/html parts.
+- `sendMessageWithAttachment` — Send an email with file attachments via Gmail. Builds a MIME multipart/mixed message with a plain-text or HTML body and one or more base64-encoded attachments. When html is provided, the body is nested in multipart/alternative.
+- `replyToMessage` — Reply to a Gmail message within its thread. Fetches the original message to set threading headers (In-Reply-To, References) and replies to the original sender. Supports HTML via multipart/alternative when html parameter is provided.
+- `getMessageAttachment` — Fetch a Gmail attachment by messageId + attachmentId. Returns standard base64 bytes (dataBase64).
+- `getThread` — Fetch all messages in a Gmail thread by threadId, in chronological order. Unlike getMessages, this preserves quoted reply chains so the full conversation context is available. Use this before replying to understand the complete thread history.
+
+## Example action
 
 ```typescript
-// Search recent invoices and extract amounts
-const msgs = await getMessages({
-  query: "subject:invoice newer_than:7d",
-});
-for (const m of msgs) {
-  const full = await getMessage({ messageId: m.id });
-  // const result = await evalStructured(full.body, invoiceSchema);  // llm plugin
-  // await appendToSheet({ ... });                                 // google-sheets plugin
-}
-
-// Send a styled reply
-await replyToMessage({
-  threadId,
-  body: "Thanks — we've received your invoice and will process it within 2 days.",
-});
+return await gmail.getMessages({ query: "is:unread", maxResults: 10 });
 ```
 
-## Notes
-
-- `getMessages` uses Gmail query syntax (`subject:`, `from:`,
-  `newer_than:`, `has:attachment`, etc.).
-- Attachment bytes are base64 — pass to `parsePdf` (data plugin) or decode for
-  files.
-- See `guides/usage-patterns.md` for deeper agent-facing patterns.
+Use named argument objects. Exact parameters and return types are in the release catalogue and the project tool contract.
